@@ -51,11 +51,22 @@ jobs:
             -Pandroid.injected.signing.key.alias=myalias \
             -Pandroid.injected.signing.key.password=pass1234
 
+      - name: Find and collect APKs
+        run: |
+          echo "=== Searching for APK files ==="
+          find . -name "*.apk" -type f
+          echo "=== Copying APKs to /tmp ==="
+          mkdir -p /tmp/apk-output
+          find . -name "*.apk" -type f -exec cp {} /tmp/apk-output/ \;
+          echo "=== Files in /tmp/apk-output ==="
+          ls -la /tmp/apk-output/
+
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: my-apk
-          path: V2rayNG/app/build/outputs/apk/release/*.apk
+          path: /tmp/apk-output/*.apk
+          if-no-files-found: error
 
       - name: Upload Keystore
         uses: actions/upload-artifact@v4
