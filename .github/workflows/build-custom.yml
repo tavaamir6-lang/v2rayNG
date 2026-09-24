@@ -1,0 +1,64 @@
+name: Build Custom
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: 'recursive'
+          fetch-depth: '0'
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      - name: Install NDK
+        run: |
+          echo "y" | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --channel=0 --install "ndk;29.0.14206865"
+          echo "NDK_HOME=$ANDROID_HOME/ndk/29.0.14206865" >> $GITHUB_ENV
+
+      - name: Download libv2ray
+        run: |
+          mkdir -p V2rayNG/app/libs
+          curl -L -o V2rayNG/app/libs/libv2ray.aar \
+            "https://github.com/2dust/AndroidLibXrayLite/releases/download/v26.9.9/libv2ray.aar"
+
+      - name: Generate Keystore
+        run: |
+          keytool -genkeypair -v \
+            -keystore release.jks \
+            -keyalg RSA -keysize 2048 -validity 10000 \
+            -alias myalias \
+            -storepass pass1234 \
+            -keypass pass1234 \
+            -dname "CN=App, OU=Dev, O=Org, L=City, S=State, C=IR"
+
+      - name: Build APK
+        run: |
+          cd V2rayNG
+          chmod +x gradlew
+          ./gradlew assembleRelease \
+            -Pandroid.injected.signing.store.file=${{ github.workspace }}/release.jks \
+            -Pandroid.injected.signing.store.password=pass1234 \
+            -Pandroid.injected.signing.key.alias=myalias \
+            -Pandroid.injected.signing.key.password=pass1234
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: my-apk
+          path: V2rayNG/app/build/outputs/apk/release/*.apk
+
+      - name: Upload Keystore
+        uses: actions/upload-artifact@v4
+        with:
+          name: my-keystore
+          path: release.jks
