@@ -35,21 +35,18 @@ jobs:
 
       - name: Fix strings.xml
         run: |
-          # دانلود نسخه‌ی تمیز از مخزن اصلی
           curl -L -o /tmp/clean_strings.xml \
             "https://raw.githubusercontent.com/2dust/v2rayNG/master/V2rayNG/app/src/main/res/values/strings.xml"
           
-          # تغییر اسم اپ
           sed -i 's|<string name="app_name" translatable="false">v2rayNG</string>|<string name="app_name" translatable="false">Light speed</string>|' /tmp/clean_strings.xml
           
-          # کپی روی فایل پروژه
           cp /tmp/clean_strings.xml V2rayNG/app/src/main/res/values/strings.xml
           
-          # نمایش خط app_name برای تأیید
           grep 'name="app_name"' V2rayNG/app/src/main/res/values/strings.xml
 
       - name: Apply icon
         run: |
+          sudo apt-get update
           sudo apt-get install -y imagemagick
           
           if [ -f icon.jpg ]; then
