@@ -33,34 +33,42 @@ jobs:
           curl -L -o V2rayNG/app/libs/libv2ray.aar \
             "https://github.com/2dust/AndroidLibXrayLite/releases/download/v26.9.9/libv2ray.aar"
 
-      - name: Download fresh strings.xml
-        run: |
-          curl -L -o /tmp/fresh_strings.xml \
-            "https://raw.githubusercontent.com/2dust/v2rayNG/master/V2rayNG/app/src/main/res/values/strings.xml"
-          echo "=== Original app_name line ==="
-          grep -n 'app_name' /tmp/fresh_strings.xml
-
-      - name: Apply Light speed name
+      - name: Fix app name in ALL languages
         run: |
           python3 << 'EOF'
+          import os
           import re
-
-          with open('/tmp/fresh_strings.xml', 'r', encoding='utf-8') as f:
-              content = f.read()
-
-          # جایگزینی کامل خط app_name
-          content = re.sub(
-              r'<string name="app_name"[^>]*>.*?</string>',
-              '<string name="app_name" translatable="false">Light speed</string>',
-              content
-          )
-
-          with open('V2rayNG/app/src/main/res/values/strings.xml', 'w', encoding='utf-8') as f:
-              f.write(content)
+          
+          base = 'V2rayNG/app/src/main/res'
+          fixed_count = 0
+          
+          for folder in os.listdir(base):
+              if folder.startswith('values'):
+                  strings_file = os.path.join(base, folder, 'strings.xml')
+                  if os.path.exists(strings_file):
+                      try:
+                          with open(strings_file, 'r', encoding='utf-8') as f:
+                              content = f.read()
+                          
+                          new_content = re.sub(
+                              r'<string name="app_name"[^>]*>.*?</string>',
+                              '<string name="app_name" translatable="false">Light speed</string>',
+                              content
+                          )
+                          
+                          if new_content != content:
+                              with open(strings_file, 'w', encoding='utf-8') as f:
+                                  f.write(new_content)
+                              fixed_count += 1
+                              print(f'Fixed: {folder}')
+                      except Exception as e:
+                          print(f'Error in {folder}: {e}')
+          
+          print(f'\n=== Total files fixed: {fixed_count} ===')
           EOF
-
-          echo "=== New app_name line ==="
-          grep -n 'app_name' V2rayNG/app/src/main/res/values/strings.xml
+          
+          echo "=== Verifying ==="
+          grep -rn 'app_name' V2rayNG/app/src/main/res/values*/strings.xml | head -20
 
       - name: Generate Keystore
         run: |
