@@ -156,7 +156,7 @@ object NotificationManager {
      */
     @RequiresApi(Build.VERSION_CODES.O)
     private fun createNotificationChannel(): String {
-        val channelId = AppConfig.RAY_NG_CHANNEL_ID
+        val channelId = AppConfig.LIGHT_SPEED_CHANNEL_ID
         val service = getService() ?: return channelId
         NotificationHelper.ensureNotificationChannel(
             context = service,
