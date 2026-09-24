@@ -33,22 +33,34 @@ jobs:
           curl -L -o V2rayNG/app/libs/libv2ray.aar \
             "https://github.com/2dust/AndroidLibXrayLite/releases/download/v26.9.9/libv2ray.aar"
 
-      - name: Fix app name
+      - name: Download fresh strings.xml
         run: |
-          python3 -c "
+          curl -L -o /tmp/fresh_strings.xml \
+            "https://raw.githubusercontent.com/2dust/v2rayNG/master/V2rayNG/app/src/main/res/values/strings.xml"
+          echo "=== Original app_name line ==="
+          grep -n 'app_name' /tmp/fresh_strings.xml
+
+      - name: Apply Light speed name
+        run: |
+          python3 << 'EOF'
           import re
-          path = 'V2rayNG/app/src/main/res/values/strings.xml'
-          with open(path, 'r', encoding='utf-8') as f:
+
+          with open('/tmp/fresh_strings.xml', 'r', encoding='utf-8') as f:
               content = f.read()
+
+          # جایگزینی کامل خط app_name
           content = re.sub(
-              r'<string name=\"app_name\"[^>]*>.*?</string>',
-              '<string name=\"app_name\" translatable=\"false\">Light speed</string>',
+              r'<string name="app_name"[^>]*>.*?</string>',
+              '<string name="app_name" translatable="false">Light speed</string>',
               content
           )
-          with open(path, 'w', encoding='utf-8') as f:
+
+          with open('V2rayNG/app/src/main/res/values/strings.xml', 'w', encoding='utf-8') as f:
               f.write(content)
-          "
-          grep 'app_name' V2rayNG/app/src/main/res/values/strings.xml
+          EOF
+
+          echo "=== New app_name line ==="
+          grep -n 'app_name' V2rayNG/app/src/main/res/values/strings.xml
 
       - name: Generate Keystore
         run: |
