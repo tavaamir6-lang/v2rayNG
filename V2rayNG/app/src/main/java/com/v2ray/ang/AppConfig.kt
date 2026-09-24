@@ -201,7 +201,7 @@ object AppConfig {
 
     /** Notification channel IDs and names. */
     // Use a new ID because Android does not let an app raise an existing channel's importance.
-    const val RAY_NG_CHANNEL_ID = "CORE_M_CH_ID_V2"
+    const val LIGHT_SPEED_CHANNEL_ID = "CORE_M_CH_ID_V2"
 
     /** Protocols Scheme **/
     const val VMESS = "vmess://"
