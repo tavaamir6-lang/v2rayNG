@@ -31,6 +31,42 @@ jobs:
           curl -L -o V2rayNG/app/libs/libv2ray.aar \
             "https://github.com/2dust/AndroidLibXrayLite/releases/download/v26.9.9/libv2ray.aar"
 
+      - name: Fix strings.xml
+        run: |
+          # دانلود نسخه‌ی تمیز از مخزن اصلی
+          curl -L -o /tmp/clean_strings.xml \
+            "https://raw.githubusercontent.com/2dust/v2rayNG/master/V2rayNG/app/src/main/res/values/strings.xml"
+          
+          # تغییر اسم اپ
+          sed -i 's|<string name="app_name" translatable="false">v2rayNG</string>|<string name="app_name" translatable="false">Light speed</string>|' /tmp/clean_strings.xml
+          
+          # کپی روی فایل پروژه
+          cp /tmp/clean_strings.xml V2rayNG/app/src/main/res/values/strings.xml
+          
+          # نمایش خط app_name برای تأیید
+          grep 'name="app_name"' V2rayNG/app/src/main/res/values/strings.xml
+
+      - name: Apply icon
+        run: |
+          sudo apt-get install -y imagemagick
+          
+          if [ -f icon.jpg ]; then
+            declare -A sizes=( ["mdpi"]=48 ["hdpi"]=72 ["xhdpi"]=96 ["xxhdpi"]=144 ["xxxhdpi"]=192 )
+            
+            for folder in "${!sizes[@]}"; do
+              size=${sizes[$folder]}
+              target="V2rayNG/app/src/main/res/mipmap-$folder"
+              mkdir -p "$target"
+              
+              convert icon.jpg -resize ${size}x${size} "$target/ic_launcher.png"
+              convert icon.jpg -resize ${size}x${size} "$target/ic_launcher_round.png"
+              convert icon.jpg -resize ${size}x${size} "$target/ic_launcher_foreground.png"
+            done
+            
+            echo "=== Icon files created ==="
+            find V2rayNG/app/src/main/res/mipmap-* -name "ic_launcher*.png"
+          fi
+
       - name: Generate Keystore
         run: |
           keytool -genkeypair -v \
@@ -53,12 +89,9 @@ jobs:
 
       - name: Find and collect APKs
         run: |
-          echo "=== Searching for APK files ==="
           find . -name "*.apk" -type f
-          echo "=== Copying APKs to /tmp ==="
           mkdir -p /tmp/apk-output
           find . -name "*.apk" -type f -exec cp {} /tmp/apk-output/ \;
-          echo "=== Files in /tmp/apk-output ==="
           ls -la /tmp/apk-output/
 
       - name: Upload APK
